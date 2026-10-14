@@ -1,0 +1,10 @@
+{% extends 'base.html' %}{% block title %}Entry {{entry.reference}}{% endblock %}{% block content %}
+<header class="page-heading"><div><div class="eyebrow">POSTED JOURNAL ENTRY</div><h1>{{entry.reference}}</h1><p>{{entry.description}}</p></div><a href="{{url_for('journals')}}" class="btn ghost">← Back to journal</a></header>
+<section class="panel"><div class="entry-meta"><div><span>Transaction date</span><strong>{{entry.posted_on.strftime('%d %B %Y')}}</strong></div><div><span>Reference</span><strong class="mono">{{entry.reference}}</strong></div><div><span>Status</span><strong class="positive">Posted</strong></div></div>
+ <div class="table-wrap"><table><thead><tr><th>Code</th><th>Account</th><th class="right">Debit</th><th class="right">Credit</th></tr></thead><tbody>
+ {% set ns=namespace(dr=0,cr=0) %}{% for l in entry.lines %}{% set ns.dr=ns.dr+l.debit %}{% set ns.cr=ns.cr+l.credit %}<tr><td class="mono">{{l.account.code}}</td><td><a href="{{url_for('ledger',code=l.account.code)}}" class="textlink">{{l.account.name}}</a></td><td class="right money">{% if l.debit %}{{moneyfmt(l.debit)}}{% else %}—{% endif %}</td><td class="right money">{% if l.credit %}{{moneyfmt(l.credit)}}{% else %}—{% endif %}</td></tr>{% endfor %}
+ </tbody><tfoot><tr><th colspan="2">TOTAL</th><th class="right money">{{moneyfmt(ns.dr)}}</th><th class="right money">{{moneyfmt(ns.cr)}}</th></tr></tfoot></table></div>
+ <div class="callout">Posted entries cannot be edited or deleted in this prototype. If a correction is needed, post a new reversing or correcting journal entry to preserve the audit trail.</div>
+</section>
+<div class="bottom-actions"><a class="btn secondary" href="{{url_for('ledger',code=entry.lines[0].account.code)}}">See related ledger →</a><a class="btn ghost" href="{{url_for('trial')}}">View trial balance →</a></div>
+{% endblock %}

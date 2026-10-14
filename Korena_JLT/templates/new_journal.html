@@ -1,0 +1,35 @@
+{% extends 'base.html' %}{% block title %}New journal entry{% endblock %}{% block content %}
+<header class="page-heading"><div><div class="eyebrow">JOURNAL / NEW ENTRY</div><h1>Create journal entry</h1><p>Enter a description, date and two or more balancing account lines.</p></div><a href="{{url_for('journals')}}" class="btn ghost">← Back to journal</a></header>
+<div class="two-panel-layout">
+ <section class="panel entry-panel">
+  <div class="panel-header"><div><h2>Transaction details</h2><p>All amounts are in Philippine pesos (₱).</p></div><span class="tag">Double-entry</span></div>
+  <form method="post" id="journal-form">
+   <input type="hidden" name="_csrf" value="{{csrf}}">
+   <div class="field-grid">
+    <label>Transaction date <input type="date" name="posted_on" value="{{today.isoformat()}}" required></label>
+    <label>Reference <span class="optional">(optional)</span><input name="reference" maxlength="80" placeholder="e.g. JRN-001"></label>
+    <label class="full-column">Description <input name="description" minlength="3" maxlength="255" required placeholder="e.g. Purchased medicine supplies in cash"></label>
+   </div>
+   <h3 class="section-title">Debit and credit lines</h3>
+   <div class="table-wrap line-table"><table><thead><tr><th>Account</th><th class="amount-heading">Debit (₱)</th><th class="amount-heading">Credit (₱)</th><th></th></tr></thead><tbody id="entry-lines">
+    {% for i in range(4) %}<tr><td><select name="code" aria-label="Account line {{i+1}}"><option value="">Select an account</option>{% for a in accounts %}<option value="{{a.code}}">{{a.code}} · {{a.name}}</option>{% endfor %}</select></td><td><input type="number" min="0" step="0.01" name="debit" placeholder="0.00" aria-label="Debit line {{i+1}}"></td><td><input type="number" min="0" step="0.01" name="credit" placeholder="0.00" aria-label="Credit line {{i+1}}"></td><td><button type="button" class="remove-row" aria-label="Remove row">×</button></td></tr>{% endfor %}
+   </tbody></table></div>
+   <div class="add-line"><button class="btn ghost" id="add-row" type="button">＋ Add another line</button></div>
+   <div class="totals-box"><div><span>Total debits</span><strong id="sum-debit">₱0.00</strong></div><div><span>Total credits</span><strong id="sum-credit">₱0.00</strong></div><div class="total-status" id="balance-status">Enter debits and credits</div></div>
+   <div class="form-actions"><button type="submit" class="btn primary">Post journal entry →</button><span>Posting updates both accounting reports immediately.</span></div>
+  </form>
+ </section>
+ <div class="right-rail">
+ <section class="panel info-panel"><div class="eyebrow">HOW IT WORKS</div><h3>Record once, update everywhere.</h3><ol><li>Choose the accounts affected by your transaction.</li><li>Enter an amount in either Debit or Credit for each line.</li><li>When the totals match, post the journal. The ledger and trial balance calculate from these lines.</li></ol><div class="tip">Example: Cash sale of ₱2,000 → <strong>Debit Cash ₱2,000</strong> and <strong>Credit Sales Revenue ₱2,000</strong>.</div></section>
+ {% if me.role=='admin' %}<section class="panel info-panel"><div class="eyebrow">CHART OF ACCOUNTS</div><details><summary class="summary-toggle">＋ Add an account</summary><form method="post" action="{{url_for('create_account')}}" class="account-form"><input type="hidden" name="_csrf" value="{{csrf}}"><label>Account code<input name="code" pattern="[0-9]{3,10}" required placeholder="e.g. 5600"></label><label>Account name<input name="name" required maxlength="120" placeholder="e.g. Transportation Expense"></label><label>Type<select name="category" required>{% for category in account_types %}<option value="{{category}}">{{category|capitalize}}</option>{% endfor %}</select></label><button type="submit" class="btn secondary">Save account</button></form></details></section>{% endif %}
+ </div>
+</div>
+<template id="entry-row"><tr><td><select name="code" aria-label="Account line"><option value="">Select an account</option>{% for a in accounts %}<option value="{{a.code}}">{{a.code}} · {{a.name}}</option>{% endfor %}</select></td><td><input type="number" min="0" step="0.01" name="debit" placeholder="0.00" aria-label="Debit"></td><td><input type="number" min="0" step="0.01" name="credit" placeholder="0.00" aria-label="Credit"></td><td><button type="button" class="remove-row" aria-label="Remove row">×</button></td></tr></template>
+<script>
+(function(){const tbody=document.getElementById('entry-lines'),template=document.getElementById('entry-row');
+const number=n=>new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format(n);
+function update(){let d=0,c=0;tbody.querySelectorAll('[name="debit"]').forEach(i=>d+=Math.round((Number(i.value)||0)*100));tbody.querySelectorAll('[name="credit"]').forEach(i=>c+=Math.round((Number(i.value)||0)*100));document.getElementById('sum-debit').textContent=number(d/100);document.getElementById('sum-credit').textContent=number(c/100);const s=document.getElementById('balance-status');s.textContent=d>0&&d===c?'✓ Balanced':d!==c?'Not yet balanced':'Enter debits and credits';s.className='total-status '+(d>0&&d===c?'is-balanced':'');}
+document.getElementById('add-row').addEventListener('click',()=>{if(tbody.children.length>=25)return alert('Maximum of 25 journal lines.');tbody.appendChild(template.content.cloneNode(true));update()});
+tbody.addEventListener('click',e=>{if(e.target.matches('.remove-row')&&tbody.children.length>2){e.target.closest('tr').remove();update()}});tbody.addEventListener('input',update);update();})();
+</script>
+{% endblock %}

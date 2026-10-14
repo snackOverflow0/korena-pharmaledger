@@ -1,0 +1,11 @@
+.env
+.env.*
+!.env.server.example
+.venv
+dist
+build
+*.db
+*.sqlite*
+__pycache__
+*.spec
+.git

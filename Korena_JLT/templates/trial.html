@@ -1,0 +1,12 @@
+{% extends 'base.html' %}{% block title %}Trial Balance{% endblock %}{% block content %}
+<header class="page-heading"><div><div class="eyebrow">MODULE 03 / 03</div><h1>Trial Balance</h1><p>Verify the account balances from all journal entries posted up to a selected date.</p></div><a class="btn ghost" href="{{url_for('export',report='trial',as_of=as_of.isoformat())}}">↓ Export CSV</a></header>
+<div class="stat-grid two-stats"><div class="stat"><div class="stat-label">Total debit balances</div><div class="stat-value">{{moneyfmt(total_debits)}}</div><div class="stat-note">As of {{as_of.strftime('%d %B %Y')}}</div></div><div class="stat"><div class="stat-label">Total credit balances</div><div class="stat-value">{{moneyfmt(total_credits)}}</div><div class="stat-note">As of {{as_of.strftime('%d %B %Y')}}</div></div></div>
+<section class="panel"><div class="panel-header"><div><h2>Unadjusted / current trial balance</h2><p>Closing and adjusting journal entries, if any, are reflected in the same report.</p></div><span class="status-pill {{'good' if balanced else 'bad'}}">{{'✓ Balanced' if balanced else '⚠ Not balanced'}}</span></div>
+ <form method="get" class="filterbar"><label>As-of date <input type="date" name="as_of" required value="{{as_of.isoformat()}}"></label><label class="checkbox-inline"><input type="checkbox" name="show_all" value="1" {% if show_all %}checked{% endif %}> Show zero-balance accounts</label><button class="btn secondary" type="submit">Generate trial balance</button></form>
+ <div class="table-wrap"><table><thead><tr><th>Account code</th><th>Account name</th><th class="right">Debit (₱)</th><th class="right">Credit (₱)</th></tr></thead><tbody>
+ {% for r in rows %}<tr><td class="mono">{{r.account.code}}</td><td><a href="{{url_for('ledger',code=r.account.code,end=as_of.isoformat())}}" class="textlink">{{r.account.name}}</a></td><td class="right money">{% if r.debit %}{{moneyfmt(r.debit)}}{% else %}—{% endif %}</td><td class="right money">{% if r.credit %}{{moneyfmt(r.credit)}}{% else %}—{% endif %}</td></tr>
+ {% else %}<tr><td colspan="4" class="empty">No account balances on this date. Post a journal first.</td></tr>{% endfor %}
+ </tbody><tfoot><tr><th colspan="2">TOTAL</th><th class="right money">{{moneyfmt(total_debits)}}</th><th class="right money">{{moneyfmt(total_credits)}}</th></tr></tfoot></table></div>
+ <div class="callout">A balanced trial balance confirms total debit balances equal total credit balances. It does not by itself prove every transaction was classified correctly.</div>
+</section>
+{% endblock %}

@@ -1,0 +1,16 @@
+{% extends 'base.html' %}{% block title %}Journal{% endblock %}{% block content %}
+<header class="page-heading"><div><div class="eyebrow">MODULE 01 / 03</div><h1>General Journal</h1><p>Record transactions as balanced debit and credit entries. The general ledger and trial balance update automatically.</p></div><a class="btn primary" href="{{url_for('new_journal')}}">＋ New journal entry</a></header>
+<div class="stat-grid">
+ <div class="stat"><div class="stat-label">Total journal entries</div><div class="stat-value">{{total_entries}}</div><div class="stat-note">Saved to MySQL</div></div>
+ <div class="stat"><div class="stat-label">Posting method</div><div class="stat-value small-value">Double-entry</div><div class="stat-note">Debits always equal credits per entry</div></div>
+ <div class="stat"><div class="stat-label">Connected records</div><div class="stat-value small-value">Automatic</div><div class="stat-note">Ledger → Trial Balance</div></div>
+</div>
+<section class="panel">
+ <div class="panel-header"><div><h2>Posted journal entries</h2><p>Use a date filter or open an entry to see all account lines.</p></div><a class="btn ghost" href="{{url_for('export',report='journal')}}">↓ Export CSV</a></div>
+ <form method="get" class="filterbar"><label>From <input type="date" name="start" value="{{start}}"></label><label>To <input type="date" name="end" value="{{end}}"></label><button class="btn secondary" type="submit">Apply filter</button><a class="textlink" href="{{url_for('journals')}}">Clear</a></form>
+ <div class="table-wrap"><table><thead><tr><th>Date</th><th>Reference</th><th>Description</th><th>Classification</th><th></th></tr></thead><tbody>
+ {% for e in entries %}<tr><td>{{e.posted_on.strftime('%d %b %Y')}}</td><td class="mono strong">{{e.reference}}</td><td>{{e.description}}</td><td><span class="tag">{{e.kind|capitalize}}</span></td><td><a class="textlink" href="{{url_for('entry_detail',entry_id=e.id)}}">View entry →</a></td></tr>
+ {% else %}<tr><td colspan="5" class="empty">No entries found. <a href="{{url_for('new_journal')}}">Create a journal entry</a> to get started.</td></tr>{% endfor %}
+ </tbody></table></div>{% if entries|length==500 %}<div class="callout">Showing the newest 500 entries. Use date filters or CSV export to view a more specific period.</div>{% endif %}
+</section>
+{% endblock %}

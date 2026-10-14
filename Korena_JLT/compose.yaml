@@ -1,0 +1,32 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: korena
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: pharmaledger
+    volumes:
+      - korena_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U korena -d pharmaledger"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql+psycopg://korena:${POSTGRES_PASSWORD}@db:5432/pharmaledger
+      FLASK_SECRET_KEY: ${FLASK_SECRET_KEY:?Set FLASK_SECRET_KEY in .env}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:?Set ADMIN_EMAIL in .env}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:?Set INITIAL_ADMIN_PASSWORD in .env}
+      KORENA_PUBLIC_SERVER: '1'
+      KORENA_HTTPS: ${KORENA_HTTPS:-0}
+    ports:
+      - '127.0.0.1:8000:8000'
+volumes:
+  korena_postgres:
